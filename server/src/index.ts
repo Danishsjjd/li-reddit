@@ -14,7 +14,6 @@ const main = async () => {
     createdAt: new Date(),
     updatedAt: new Date(),
   })
-  // await orm.em.persistAndFlush(post)
   await fork.persistAndFlush(post)
 }
 

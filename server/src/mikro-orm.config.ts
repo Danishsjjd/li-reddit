@@ -11,9 +11,9 @@ export default {
     glob: "!(*.d).{js,ts}",
   },
   type: "postgresql",
-  name: "postgres",
-  password: "postgres",
-  dbName: "lireddit",
+  name: process.env.DATABASE_UNAME,
+  password: process.env.DATABASE_PASS,
+  dbName: process.env.DB_NAME,
   entities: [Post],
   debug: !__prod__,
 } as Parameters<typeof MikroORM.init<PostgreSqlDriver>>[0]
