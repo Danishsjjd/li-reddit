@@ -31,5 +31,11 @@
     "dotenv": "^16.0.3",
     "npm": "^9.2.0",
     "typescript": "^4.9.4"
+  },
+  "mikro-orm": {
+    "configPaths": [
+      "./src/mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
   }
 }

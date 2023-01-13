@@ -7,8 +7,12 @@ import middleware from "./startup/middleware"
 const app = express()
 const port = process.env.PORT || 4000
 
-dbConnectAndMigrate()
-middleware(app)
+async function main() {
+  const em = await dbConnectAndMigrate()
+  middleware(app, em)
+}
+
+main()
 
 app.listen(port, () => {
   console.log(`server is running at ${port}`)
