@@ -1,20 +1,15 @@
-import { MikroORM } from "@mikro-orm/core"
+import express from "express"
 
-import { __prod__ } from "./constants"
-import { Post } from "./entities/Post"
-import mikroOrmConfig from "./mikro-orm.config"
+import "./startup/config"
+import dbConnectAndMigrate from "./startup/db"
+import middleware from "./startup/middleware"
 
-const main = async () => {
-  const orm = await MikroORM.init(mikroOrmConfig)
-  await orm.getMigrator().up()
-  const fork = orm.em.fork()
+const app = express()
+const port = process.env.PORT || 4000
 
-  const post = fork.create(Post, {
-    title: "second post",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  })
-  await fork.persistAndFlush(post)
-}
+dbConnectAndMigrate()
+middleware(app)
 
-main().catch(console.error)
+app.listen(port, () => {
+  console.log(`server is running at ${port}`)
+})
