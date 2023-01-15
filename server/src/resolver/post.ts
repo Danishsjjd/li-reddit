@@ -1,7 +1,7 @@
-import { Post } from "../entities/Post"
-import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql"
-import { MyContext } from "src/type"
 import { Loaded } from "@mikro-orm/core"
+import { MyContext } from "src/type"
+import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql"
+import { Post } from "../entities/Post"
 
 @Resolver()
 export default class PostResolver {

@@ -1,5 +1,4 @@
 import express from "express"
-
 import "./startup/config"
 import dbConnectAndMigrate from "./startup/db"
 import middleware from "./startup/middleware"
