@@ -1,7 +1,16 @@
 import { User } from "../entities/User"
 import { MyContext } from "../type"
-import { Arg, Ctx, Field, InputType, Mutation, Resolver } from "type-graphql"
-import { hash } from "argon2"
+import {
+  Arg,
+  Ctx,
+  Field,
+  InputType,
+  Mutation,
+  ObjectType,
+  Query,
+  Resolver,
+} from "type-graphql"
+import { hash, verify } from "argon2"
 
 @InputType()
 class UsernamePasswordInput {
@@ -12,13 +21,30 @@ class UsernamePasswordInput {
   password: string
 }
 
+@ObjectType()
+class FieldError {
+  @Field()
+  error: string
+  @Field()
+  message: string
+}
+
+@ObjectType()
+class UserResponse {
+  @Field(() => FieldError, { nullable: true })
+  error?: FieldError
+
+  @Field(() => User, { nullable: true })
+  user?: User
+}
+
 @Resolver()
 export class UserResolver {
   @Mutation(() => User)
   async register(
     @Arg("options") options: UsernamePasswordInput,
     @Ctx() { em }: MyContext
-  ) {
+  ): Promise<UserResponse> {
     console.log(options)
     const hashedPassword = await hash(options.password)
     const user = em.create(User, {
@@ -26,6 +52,23 @@ export class UserResolver {
       password: hashedPassword,
     })
     await em.persistAndFlush(user)
-    return user
+    return { user }
+  }
+
+  @Query(() => UserResponse)
+  async login(
+    @Arg("options") options: UsernamePasswordInput,
+    @Ctx() { em }: MyContext
+  ): Promise<UserResponse> {
+    const user = await em.findOne(User, { username: options.username })
+
+    if (!user)
+      return { error: { message: "user is not exists", error: "username" } }
+
+    const isPasswordMatched = await verify(user.password, options.password)
+    if (!isPasswordMatched)
+      return { error: { message: "password is not match", error: "password" } }
+
+    return { user }
   }
 }
