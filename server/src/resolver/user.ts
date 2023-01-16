@@ -24,15 +24,15 @@ class UsernamePasswordInput {
 @ObjectType()
 class FieldError {
   @Field()
-  error: string
+  field: string
   @Field()
   message: string
 }
 
 @ObjectType()
 class UserResponse {
-  @Field(() => FieldError, { nullable: true })
-  error?: FieldError
+  @Field(() => [FieldError], { nullable: true })
+  error?: FieldError[]
 
   @Field(() => User, { nullable: true })
   user?: User
@@ -51,7 +51,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     const hashedPassword = await hash(options.password)
     const user = em.create(User, {
@@ -62,8 +62,11 @@ export class UserResolver {
       await em.persistAndFlush(user)
     } catch (e) {
       if (e.code === "23505" || e.detail.includes("already exists"))
-        return { error: { error: "user", message: "user is already exists" } }
+        return {
+          error: [{ field: "username", message: "username is already taken" }],
+        }
     }
+    req.session.userId = user.id
     return { user }
   }
 
@@ -75,11 +78,13 @@ export class UserResolver {
     const user = await em.findOne(User, { username: options.username })
 
     if (!user)
-      return { error: { message: "user is not exists", error: "username" } }
+      return { error: [{ message: "user is not exists", field: "username" }] }
 
     const isPasswordMatched = await verify(user.password, options.password)
     if (!isPasswordMatched)
-      return { error: { message: "password is not match", error: "password" } }
+      return {
+        error: [{ message: "password is not match", field: "password" }],
+      }
 
     req.session.userId = user.id
 

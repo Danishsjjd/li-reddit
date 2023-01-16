@@ -9,12 +9,14 @@ import { HelloResolver } from "../resolver/hello"
 import PostResolver from "../resolver/post"
 import { UserResolver } from "../resolver/user"
 import { MyContext } from "../type"
+import cors from "cors"
 
 let RedisStore = RedisStoreFunc(session)
 let redisClient = createClient({ legacyMode: true })
 redisClient.connect().catch(console.error)
 
 export default async function (app: Express, em: MyContext["em"]) {
+  app.use(cors({ origin: "http://localhost:3000", credentials: true }))
   app.use(
     session({
       name: "qid",
@@ -37,6 +39,7 @@ export default async function (app: Express, em: MyContext["em"]) {
       validate: false,
     }),
     context: (): MyContext => ({ em, req: request as Request }),
+    cors: { origin: "http://localhost:3000" },
   })
 
   app.use(
