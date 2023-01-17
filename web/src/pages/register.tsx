@@ -1,5 +1,7 @@
 import Input from "@/components/Input"
 import { useRegisterMutation } from "@/generated/graphql"
+import { createUrqlClient } from "@/utils/createUrqlClient"
+import { withUrqlClient } from "next-urql"
 import { useRouter } from "next/router"
 import React from "react"
 import { useForm } from "react-hook-form"
@@ -55,4 +57,4 @@ const Register = () => {
   )
 }
 
-export default Register
+export default withUrqlClient(createUrqlClient)(Register)

@@ -3,6 +3,8 @@ import { useLoginMutation } from "@/generated/graphql"
 import React from "react"
 import { useForm } from "react-hook-form"
 import { useRouter } from "next/router"
+import { withUrqlClient } from "next-urql"
+import { createUrqlClient } from "@/utils/createUrqlClient"
 
 type FormData = {
   username: string
@@ -55,4 +57,4 @@ const Login = () => {
   )
 }
 
-export default Login
+export default withUrqlClient(createUrqlClient)(Login)

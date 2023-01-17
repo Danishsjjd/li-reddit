@@ -1,10 +1,10 @@
 import RedisStoreFunc from "connect-redis"
-import type { Express, Request } from "express"
+import type { Express, Request, Response } from "express"
 import session from "express-session"
 import { createYoga } from "graphql-yoga"
 import { createClient } from "redis"
 import { buildSchema } from "type-graphql"
-import { __prod__ } from "../constants"
+import { COOKIE_NAME, __prod__ } from "../constants"
 import { HelloResolver } from "../resolver/hello"
 import PostResolver from "../resolver/post"
 import { UserResolver } from "../resolver/user"
@@ -19,7 +19,7 @@ export default async function (app: Express, em: MyContext["em"]) {
   app.use(cors({ origin: "http://localhost:3000", credentials: true }))
   app.use(
     session({
-      name: "qid",
+      name: COOKIE_NAME,
       store: new RedisStore({ client: redisClient, disableTouch: true }),
       saveUninitialized: false,
       secret: process.env.SECRET_KEY || "secret key",
@@ -33,18 +33,24 @@ export default async function (app: Express, em: MyContext["em"]) {
     })
   )
   let request: null | Request
+  let response: null | Response
   const yoga = createYoga({
     schema: await buildSchema({
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: (): MyContext => ({ em, req: request as Request }),
+    context: (): MyContext => ({
+      em,
+      req: request as Request,
+      res: response as Response,
+    }),
     cors: { origin: "http://localhost:3000" },
   })
 
   app.use(
     "/graphql",
-    (req, _, next) => {
+    (req, res, next) => {
+      response = res
       request = req
       next()
     },
