@@ -1,17 +1,17 @@
 import Input from "@/components/Input"
-import { useRegisterMutation } from "@/generated/graphql"
-import { useRouter } from "next/router"
+import { useLoginMutation } from "@/generated/graphql"
 import React from "react"
 import { useForm } from "react-hook-form"
+import { useRouter } from "next/router"
 
 type FormData = {
   username: string
   password: string
 }
 
-const Register = () => {
+const Login = () => {
   const router = useRouter()
-  const [, registerUser] = useRegisterMutation()
+  const [, loginUser] = useLoginMutation()
   const {
     formState: { errors, isSubmitting },
     handleSubmit,
@@ -20,9 +20,9 @@ const Register = () => {
   } = useForm<FormData>()
 
   const onSubmit = async (data: FormData) => {
-    const response = await registerUser({ options: data })
-    if (response.data?.register.errors) {
-      response.data.register.errors.map(({ field, message }) => {
+    const response = await loginUser({ options: data })
+    if (response.data?.login.errors) {
+      response.data.login.errors.map(({ field, message }) => {
         setError(field as keyof FormData, { message })
       })
     } else {
@@ -48,11 +48,11 @@ const Register = () => {
           type={"password"}
         />
         <button className={`btn mt-4 ${isSubmitting ? "loading" : ""}`}>
-          Register
+          Login
         </button>
       </form>
     </section>
   )
 }
 
-export default Register
+export default Login

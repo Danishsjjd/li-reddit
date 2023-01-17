@@ -32,7 +32,7 @@ class FieldError {
 @ObjectType()
 class UserResponse {
   @Field(() => [FieldError], { nullable: true })
-  error?: FieldError[]
+  errors?: FieldError[]
 
   @Field(() => User, { nullable: true })
   user?: User
@@ -63,7 +63,7 @@ export class UserResolver {
     } catch (e) {
       if (e.code === "23505" || e.detail.includes("already exists"))
         return {
-          error: [{ field: "username", message: "username is already taken" }],
+          errors: [{ field: "username", message: "username is already taken" }],
         }
     }
     req.session.userId = user.id
@@ -78,12 +78,14 @@ export class UserResolver {
     const user = await em.findOne(User, { username: options.username })
 
     if (!user)
-      return { error: [{ message: "user is not exists", field: "username" }] }
+      return {
+        errors: [{ message: "username is not exists", field: "username" }],
+      }
 
     const isPasswordMatched = await verify(user.password, options.password)
     if (!isPasswordMatched)
       return {
-        error: [{ message: "password is not match", field: "password" }],
+        errors: [{ message: "password is not match", field: "password" }],
       }
 
     req.session.userId = user.id
