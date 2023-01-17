@@ -2,7 +2,7 @@ import RedisStoreFunc from "connect-redis"
 import type { Express, Request, Response } from "express"
 import session from "express-session"
 import { createYoga } from "graphql-yoga"
-import { createClient } from "redis"
+import { Redis } from "ioredis"
 import { buildSchema } from "type-graphql"
 import { COOKIE_NAME, __prod__ } from "../constants"
 import { HelloResolver } from "../resolver/hello"
@@ -12,15 +12,14 @@ import { MyContext } from "../type"
 import cors from "cors"
 
 let RedisStore = RedisStoreFunc(session)
-let redisClient = createClient({ legacyMode: true })
-redisClient.connect().catch(console.error)
+let redis = new Redis()
 
 export default async function (app: Express, em: MyContext["em"]) {
   app.use(cors({ origin: "http://localhost:3000", credentials: true }))
   app.use(
     session({
       name: COOKIE_NAME,
-      store: new RedisStore({ client: redisClient, disableTouch: true }),
+      store: new RedisStore({ client: redis, disableTouch: true }),
       saveUninitialized: false,
       secret: process.env.SECRET_KEY || "secret key",
       resave: false,
@@ -43,6 +42,7 @@ export default async function (app: Express, em: MyContext["em"]) {
       em,
       req: request as Request,
       res: response as Response,
+      redis,
     }),
     cors: { origin: "http://localhost:3000" },
   })

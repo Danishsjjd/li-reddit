@@ -44,7 +44,8 @@ export type MutationDeletePostArgs = {
 
 
 export type MutationLoginArgs = {
-  options: UsernamePasswordInput;
+  password: Scalars['String'];
+  usernameOrEmail: Scalars['String'];
 };
 
 
@@ -82,6 +83,7 @@ export type QueryPostArgs = {
 export type User = {
   __typename?: 'User';
   createdAt: Scalars['DateTime'];
+  email: Scalars['String'];
   id: Scalars['Float'];
   updatedAt: Scalars['DateTime'];
   username: Scalars['String'];
@@ -94,6 +96,7 @@ export type UserResponse = {
 };
 
 export type UsernamePasswordInput = {
+  email: Scalars['String'];
   password: Scalars['String'];
   username: Scalars['String'];
 };
@@ -101,7 +104,8 @@ export type UsernamePasswordInput = {
 export type RegularUserFragment = { __typename?: 'User', id: number, username: string, createdAt: any, updatedAt: any };
 
 export type LoginMutationVariables = Exact<{
-  options: UsernamePasswordInput;
+  password: Scalars['String'];
+  usernameOrEmail: Scalars['String'];
 }>;
 
 
@@ -130,7 +134,7 @@ export type PostsQueryVariables = Exact<{ [key: string]: never; }>;
 export type PostsQuery = { __typename?: 'Query', posts: Array<{ __typename?: 'Post', id: number, createdAt: any, updatedAt: any, title: string }> };
 
 export const RegularUserFragmentDoc = gql`
-    fragment RegularUser on User {
+    fragment regularUser on User {
   id
   username
   createdAt
@@ -138,14 +142,14 @@ export const RegularUserFragmentDoc = gql`
 }
     `;
 export const LoginDocument = gql`
-    mutation login($options: UsernamePasswordInput!) {
-  login(options: $options) {
+    mutation login($password: String!, $usernameOrEmail: String!) {
+  login(password: $password, usernameOrEmail: $usernameOrEmail) {
     errors {
       field
       message
     }
     user {
-      ...RegularUser
+      ...regularUser
     }
   }
 }
@@ -171,7 +175,7 @@ export const RegisterDocument = gql`
       message
     }
     user {
-      ...RegularUser
+      ...regularUser
     }
   }
 }
@@ -183,7 +187,7 @@ export function useRegisterMutation() {
 export const MeDocument = gql`
     query me {
   me {
-    ...RegularUser
+    ...regularUser
   }
 }
     ${RegularUserFragmentDoc}`;

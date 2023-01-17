@@ -7,7 +7,7 @@ import { withUrqlClient } from "next-urql"
 import { createUrqlClient } from "@/utils/createUrqlClient"
 
 type FormData = {
-  username: string
+  usernameOrEmail: string
   password: string
 }
 
@@ -22,12 +22,15 @@ const Login = () => {
   } = useForm<FormData>()
 
   const onSubmit = async (data: FormData) => {
-    const response = await loginUser({ options: data })
+    const response = await loginUser({
+      password: data.password,
+      usernameOrEmail: data.usernameOrEmail,
+    })
     if (response.data?.login.errors) {
       response.data.login.errors.map(({ field, message }) => {
         setError(field as keyof FormData, { message })
       })
-    } else {
+    } else if (response.data?.login.user) {
       router.push("/")
     }
   }
@@ -37,9 +40,9 @@ const Login = () => {
       <form onSubmit={handleSubmit(onSubmit)}>
         <Input<FormData>
           errors={errors}
-          name="username"
+          name="usernameOrEmail"
           register={register}
-          title="Username"
+          title="username or email"
           type={"text"}
         />
         <Input<FormData>

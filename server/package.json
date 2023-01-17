@@ -25,11 +25,12 @@
     "express-session": "^1.17.3",
     "graphql": "^15.8.0",
     "graphql-yoga": "^3.3.0",
+    "ioredis": "^5.2.5",
     "nodemailer": "^6.9.0",
     "nodemon": "^2.0.20",
     "pg": "^8.8.0",
-    "redis": "^4.5.1",
-    "type-graphql": "^1.1.1"
+    "type-graphql": "^1.1.1",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@types/connect-redis": "^0.0.19",
@@ -37,6 +38,8 @@
     "@types/express": "^4.17.15",
     "@types/express-session": "^1.17.5",
     "@types/node": "^18.11.18",
+    "@types/nodemailer": "^6.4.7",
+    "@types/uuid": "^9.0.0",
     "dotenv": "^16.0.3",
     "npm": "^9.2.0",
     "ts-node": "^10.9.1",

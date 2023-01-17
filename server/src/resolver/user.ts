@@ -11,7 +11,9 @@ import {
   Resolver,
 } from "type-graphql"
 import { hash, verify } from "argon2"
-import { COOKIE_NAME } from "../constants"
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants"
+import { v4 } from "uuid"
+import { sendMail } from "../utils/sendMail"
 
 @InputType()
 class UsernamePasswordInput {
@@ -20,6 +22,9 @@ class UsernamePasswordInput {
 
   @Field()
   password: string
+
+  @Field()
+  email: string
 }
 
 @ObjectType()
@@ -49,14 +54,41 @@ export class UserResolver {
     return user
   }
 
+  @Mutation(() => Boolean)
+  async forgetPassword(
+    @Arg("email") email: string,
+    @Ctx() { redis, em }: MyContext
+  ) {
+    const user = await em.findOne(User, { email })
+    if (!user) return true
+    const token = v4()
+    await redis.setex(
+      FORGET_PASSWORD_PREFIX + token,
+      60 * 15 /* 15min */,
+      user.id
+    )
+    const html = `<a href="http://localhost:3000/change-password/${token}">forget password</a>`
+    await sendMail({ html, subject: "reset your password", to: email })
+    return true
+  }
+
   @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput,
     @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
+    if (options.username.includes("@"))
+      return {
+        errors: [{ field: "username", message: "username cannot contains @" }],
+      }
+    if (!options.email.includes("@"))
+      return {
+        errors: [{ field: "email", message: "invalid email" }],
+      }
     const hashedPassword = await hash(options.password)
     const user = em.create(User, {
       username: options.username,
+      email: options.email,
       password: hashedPassword,
     })
     try {
@@ -73,17 +105,23 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async login(
-    @Arg("options") options: UsernamePasswordInput,
+    @Arg("usernameOrEmail") usernameOrEmail: string,
+    @Arg("password") password: string,
     @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
-    const user = await em.findOne(User, { username: options.username })
+    const user = await em.findOne(
+      User,
+      usernameOrEmail.includes("@")
+        ? { email: usernameOrEmail }
+        : { username: usernameOrEmail }
+    )
 
     if (!user)
       return {
-        errors: [{ message: "username is not exists", field: "username" }],
+        errors: [{ message: "user not exists", field: "usernameOrEmail" }],
       }
 
-    const isPasswordMatched = await verify(user.password, options.password)
+    const isPasswordMatched = await verify(user.password, password)
     if (!isPasswordMatched)
       return {
         errors: [{ message: "password is not match", field: "password" }],

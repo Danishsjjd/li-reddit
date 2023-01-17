@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form"
 type FormData = {
   username: string
   password: string
+  email: string
 }
 
 const Register = () => {
@@ -27,7 +28,7 @@ const Register = () => {
       response.data.register.errors.map(({ field, message }) => {
         setError(field as keyof FormData, { message })
       })
-    } else {
+    } else if (response.data?.register.user) {
       router.push("/")
     }
   }
@@ -41,6 +42,13 @@ const Register = () => {
           register={register}
           title="Username"
           type={"text"}
+        />
+        <Input<FormData>
+          errors={errors}
+          name="email"
+          register={register}
+          title="Email"
+          type={"email"}
         />
         <Input<FormData>
           errors={errors}

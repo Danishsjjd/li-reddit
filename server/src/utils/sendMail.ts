@@ -1,25 +1,38 @@
-const nodeMailer = require("nodemailer")
+// TODO:
+// ! nodemailer not working on my pc but it's working on cloud
+// ! I think it's because of firewall of may be other issue
+// ! so, for now I'm gonna mock this.
 
-const sendMail = async (options) => {
-  const transporter = nodeMailer.createTransport({
-    host: "smtp.gmail.com",
-    port: "465",
-    service: "gmail",
-    // secure: true,
-    auth: {
-      user: process.env.SMTP_MAIL,
-      pass: process.env.SMTP_PASSWORD,
-    },
-  })
+// import nodemailer from "nodemailer"
 
-  const mailOptions = {
-    from: process.env.SMTP_MAIL,
-    to: options.email,
-    subject: options.subject,
-    html: options.message,
-  }
-
-  await transporter.sendMail(mailOptions)
+type Mail = {
+  to: string
+  subject: string
+  html: string
 }
 
-module.exports = sendMail
+export async function sendMail(options: Mail) {
+  console.log(options)
+  // Generate test SMTP service account from ethereal.email
+  // Only needed if you don't have a real mail account for testing
+  // let testAccount = await nodemailer.createTestAccount();
+
+  // let transporter = nodemailer.createTransport({
+  //   host: "smtp.ethereal.email",
+  //   port: 587,
+  //   secure: false, // true for 465, false for other ports
+  //   auth: {
+  //     user: "w7zevtfdoyxj62rv@ethereal.email", // generated ethereal user
+  //     pass: "JFBjEBeJCuZHGHVUBM", // generated ethereal password
+  //   },
+  // })
+
+  // // send mail with defined transport object
+  // await transporter.sendMail({
+  //   from: '"Danish Sajjad" <danishsjjad@gmail.com>', // sender address
+  //   to: "dsajjad258@gmail.com", // list of receivers
+  //   subject: "Hello ✔", // Subject line
+  //   text: "Hello world? plain text", // plain text body
+  //   html: "<b>Hello world? in html</b>", // html body
+  // })
+}
