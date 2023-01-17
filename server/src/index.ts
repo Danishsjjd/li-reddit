@@ -7,8 +7,8 @@ const app = express()
 const port = process.env.PORT || 4000
 
 async function main() {
-  const em = await dbConnectAndMigrate()
-  middleware(app, em)
+  await dbConnectAndMigrate.initialize()
+  middleware(app)
 }
 
 main()

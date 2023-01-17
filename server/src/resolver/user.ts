@@ -47,19 +47,18 @@ class UserResponse {
 @Resolver()
 export class UserResolver {
   @Query(() => User, { nullable: true })
-  async me(@Ctx() { req, em }: MyContext) {
+  me(@Ctx() { req }: MyContext) {
     if (!req.session.userId) return null
 
-    const user = await em.findOne(User, { id: req.session.userId })
-    return user
+    return User.findOne({ where: { id: req.session.userId } })
   }
 
   @Mutation(() => Boolean)
   async forgetPassword(
     @Arg("email") email: string,
-    @Ctx() { redis, em }: MyContext
+    @Ctx() { redis }: MyContext
   ) {
-    const user = await em.findOne(User, { email })
+    const user = await User.findOne({ where: { email } })
     if (!user) return true
     const token = v4()
     await redis.setex(
@@ -76,7 +75,7 @@ export class UserResolver {
   async resetPassword(
     @Arg("newPassword") newPassword: string,
     @Arg("token") token: string,
-    @Ctx() { em, redis, req }: MyContext
+    @Ctx() { redis, req }: MyContext
   ): Promise<UserResponse> {
     const key = FORGET_PASSWORD_PREFIX + token
     const haveToken = await redis.get(key)
@@ -84,7 +83,7 @@ export class UserResolver {
       return {
         errors: [{ field: "token", message: "token is expire" }],
       }
-    const user = await em.findOne(User, { id: parseInt(haveToken) })
+    const user = await User.findOne({ where: { id: parseInt(haveToken) } })
     if (!user)
       return {
         errors: [{ field: "user", message: "user is deleted" }],
@@ -92,7 +91,7 @@ export class UserResolver {
     req.session.userId = user.id
     const hashedPassword = await hash(newPassword)
     user.password = hashedPassword
-    await em.persistAndFlush(user)
+    await user.save()
     await redis.del(key)
     return { user }
   }
@@ -100,7 +99,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput,
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
     if (options.username.includes("@"))
       return {
@@ -111,13 +110,13 @@ export class UserResolver {
         errors: [{ field: "email", message: "invalid email" }],
       }
     const hashedPassword = await hash(options.password)
-    const user = em.create(User, {
+    const user = User.create({
       username: options.username,
       email: options.email,
       password: hashedPassword,
     })
     try {
-      await em.persistAndFlush(user)
+      await user.save()
     } catch (e) {
       if (e.code === "23505" || e.detail.includes("already exists"))
         return {
@@ -132,14 +131,13 @@ export class UserResolver {
   async login(
     @Arg("usernameOrEmail") usernameOrEmail: string,
     @Arg("password") password: string,
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
-    const user = await em.findOne(
-      User,
-      usernameOrEmail.includes("@")
+    const user = await User.findOne({
+      where: usernameOrEmail.includes("@")
         ? { email: usernameOrEmail }
-        : { username: usernameOrEmail }
-    )
+        : { username: usernameOrEmail },
+    })
 
     if (!user)
       return {

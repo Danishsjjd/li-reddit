@@ -14,7 +14,7 @@ import cors from "cors"
 let RedisStore = RedisStoreFunc(session)
 let redis = new Redis()
 
-export default async function (app: Express, em: MyContext["em"]) {
+export default async function (app: Express) {
   app.use(cors({ origin: "http://localhost:3000", credentials: true }))
   app.use(
     session({
@@ -39,7 +39,6 @@ export default async function (app: Express, em: MyContext["em"]) {
       validate: false,
     }),
     context: (): MyContext => ({
-      em,
       req: request as Request,
       res: response as Response,
       redis,
