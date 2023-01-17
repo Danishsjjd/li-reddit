@@ -4,6 +4,7 @@ import {
   MeDocument,
   RegisterMutation,
   LogoutMutation,
+  ResetPasswordMutation,
 } from "@/generated/graphql"
 import { devtoolsExchange } from "@urql/devtools"
 import { dedupExchange, fetchExchange } from "urql"
@@ -42,6 +43,13 @@ export const createUrqlClient = (ssrExchange: any) => ({
               return {
                 me: null,
               }
+            })
+          },
+          resetPassword: (results: ResetPasswordMutation, _, cache) => {
+            cache.updateQuery<MeQuery>({ query: MeDocument }, (query) => {
+              if (results.resetPassword.user?.id)
+                return { me: results.resetPassword.user }
+              else return { me: null }
             })
           },
         },

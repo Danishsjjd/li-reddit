@@ -73,6 +73,31 @@ export class UserResolver {
   }
 
   @Mutation(() => UserResponse)
+  async resetPassword(
+    @Arg("newPassword") newPassword: string,
+    @Arg("token") token: string,
+    @Ctx() { em, redis, req }: MyContext
+  ): Promise<UserResponse> {
+    const key = FORGET_PASSWORD_PREFIX + token
+    const haveToken = await redis.get(key)
+    if (!haveToken)
+      return {
+        errors: [{ field: "token", message: "token is expire" }],
+      }
+    const user = await em.findOne(User, { id: parseInt(haveToken) })
+    if (!user)
+      return {
+        errors: [{ field: "user", message: "user is deleted" }],
+      }
+    req.session.userId = user.id
+    const hashedPassword = await hash(newPassword)
+    user.password = hashedPassword
+    await em.persistAndFlush(user)
+    await redis.del(key)
+    return { user }
+  }
+
+  @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput,
     @Ctx() { em, req }: MyContext

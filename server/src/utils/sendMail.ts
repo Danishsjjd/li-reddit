@@ -1,6 +1,6 @@
 // TODO:
 // ! nodemailer not working on my pc but it's working on cloud
-// ! I think it's because of firewall of may be other issue
+// ! I think it's because of firewall of maybe other issue
 // ! so, for now I'm gonna mock this.
 
 // import nodemailer from "nodemailer"
