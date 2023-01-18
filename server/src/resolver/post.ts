@@ -1,5 +1,28 @@
-import { Arg, Mutation, Query, Resolver } from "type-graphql"
+import { IsAuth } from "../middleware/isAuth"
+import {
+  Arg,
+  Ctx,
+  Field,
+  InputType,
+  Mutation,
+  Query,
+  Resolver,
+  UseMiddleware,
+} from "type-graphql"
 import { Post } from "../entities/Post"
+import { MyContext } from "src/type"
+
+@InputType()
+class PostInputs {
+  @Field()
+  title: string
+
+  @Field()
+  points?: number
+
+  @Field()
+  text: string
+}
 
 @Resolver()
 export default class PostResolver {
@@ -14,18 +37,25 @@ export default class PostResolver {
   }
 
   @Mutation(() => Post)
-  async createPost(@Arg("title") title: string): Promise<Post> {
-    return await Post.create({ title }).save()
+  @UseMiddleware(IsAuth)
+  async createPost(
+    @Arg("inputs") inputs: PostInputs,
+    @Ctx() { req }: MyContext
+  ): Promise<Post> {
+    return await Post.create({
+      ...inputs,
+      creatorId: req.session.userId,
+    }).save()
   }
 
   @Mutation(() => Post, { nullable: true })
   async updatePost(
-    @Arg("id") id: number,
-    @Arg("title") title: string
+    @Arg("id") id: number
+    // @Arg("inputs") inputs: PostInputs
   ): Promise<Post | null> {
     const post = await Post.findOne({ where: { id } })
     if (!post) return null
-    post.title = title
+
     await post.save()
     return post
   }
